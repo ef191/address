@@ -1,0 +1,855 @@
+# Embodied AI — speaking script
+
+For the 36-slide deck. Roughly 33 minutes at a normal pace.
+Slides 1, 4, 5, 6, 9, 12, 18, 22 and 28 are full-page infographics — the wording below
+matches what is printed on them.
+Text in *italics* is stage direction, not something to say out loud.
+A 15-minute cut is listed at the end.
+
+---
+## Audience and thesis
+
+**Who is in the room:** robotics engineers whose training predates the learning-based era.
+They know
+mechanisms, control and classical perception cold. What they have not tracked is the last
+decade of learning-based robotics: what a pretrained policy is, how simulation became a
+training tool, what changed in the workflow. Do not re-teach kinematics; do explain the
+model vocabulary once each.
+
+**The argument you are making:** robot development has changed shape — task knowledge
+moved from hand-written code into trained weights — and because hardware is commoditising,
+the brain is now where the value and the difficulty sit. Generative AI is loud, and
+robotics people are being pulled into LLM and agent work where none of their training
+counts; the better move is to point those same model skills at a body. Slides 4 to 6 set
+this up, slide 36 says it outright, and slide 39 lands it.
+
+**Say the qualifier out loud, early and once.** This is not "ignore generative AI." A VLA
+*is* a generative model — they have to learn transformers, fine-tuning and flow matching
+regardless. The claim is about where to point those skills, not whether to acquire them.
+If you skip this, the sharpest person in the room will raise it and the talk loses its
+footing.
+
+**The second qualifier belongs on slide 33.** Embodied AI is raising far more than it
+sells, and reliable unattended autonomy is forecast around 2028–2030. Do not hide that to
+make the call to action cleaner. Use it: the gap between capital and revenue is exactly
+the window where preparation is cheap and a scarce skill is worth the most. And say
+plainly that the preparation is durable either way — simulation, evaluation and control
+skills do not become worthless if the timeline slips.
+
+**Spend your time on** slides 4–6 (the workflow change, why it is worth it, the commodity
+argument), 22 (VLA), 24 (the build pipeline), 31 (form factors), 32 (frontiers), 35
+(evidence ladder) and 36–39 (the call).
+
+**Where to be brief:** slides 2–3 are framing, not information. The company
+and country block, 22–26, is orientation — read the group labels, not the names.
+
+**Register.** Hz, DoF, IK, RRT, DDS and QoS need no definition. Define VLA, flow matching,
+domain randomisation and cross-embodiment once each.
+
+---
+
+## 1 — Cover
+
+*Leave this up while people settle. Don't read the panels aloud.*
+
+"Everyone here has used AI that writes. Most of you have used AI that draws, or codes,
+or summarises. Today I want to talk about the version that has to pick something up.
+
+That's embodied AI. The picture on screen is the whole talk in one line: five waves of
+AI, ending at machines that act on the physical world. I'll cover why that last panel
+is so much harder than the ones before it, who is actually building it, and whether it
+is really where the field is going — or just where the money is going."
+
+---
+
+## 2 — Six eras, and what each one unlocked
+
+*Historical on-ramp. Read the six era names and the punchline; let people read the rest.*
+
+"Before the technical part, a century in six eras.
+
+The word arrives in 1920, in a Czech play — Čapek coined it from *robota*, forced
+labour. 'Does our work for us' was in the name before any machine existed.
+
+1954 to the seventies, the arm: Unimate at a GM plant. One motion, repeated, in a jig
+built so the part is always in exactly the same place.
+
+Now the era I want you to notice. 1966 to '72, SRI's Shakey. It planned multi-step
+tasks. It could reason. And it still could not pick up a mug.
+
+Then sense-and-react — subsumption, then SLAM, robots that cope with a world they never
+modelled. Then autonomy at scale: the DARPA Grand Challenge, ROS, and deep learning
+finally cracking vision in 2012.
+
+And now, instructable robots: models that arrive already knowing what the world contains,
+which you talk to instead of program.
+
+The line at the bottom is the whole story. Task planning got a body in 1972. Seeing and handling took another forty years."
+
+---
+
+## 3 — Eight techniques, still all in use
+
+*Don't read all eight. Name three or four and land the bottom line.*
+
+"And here is what actually moved it — every one of these still running underneath a
+modern robot.
+
+Feedback control from the fifties: PID holding a joint where you put it. Teach and
+repeat from the sixties: record a trajectory, play it back, exact and cheap and helpless
+if anything moves.
+
+Planning and search in the seventies through nineties — STRIPS and A*, later RRT.
+Probabilistic estimation, Kalman filters and SLAM, so the robot knows where it is
+without being told. ROS in 2007 so nobody rewrites a lidar driver again.
+
+Then deep learning for vision in 2012, learned control from 2013, and simulation at GPU
+scale from 2017 — training data without buying hardware.
+
+And here is the connection to everything after this slide. Embodied AI is the ninth
+layer, not a replacement for the other eight. PID still holds the joint. SLAM still says
+where the robot is. ROS still moves the messages. The new model only decides what to do
+next.
+
+If you take that seriously, a lot of the hype reads differently — nobody has replaced
+robotics. They have added a decision-maker on top of it."
+
+---
+
+## 4 — How a robot programme runs now
+
+*The orientation slide for this audience. Give it time.*
+
+"Here is the change in one picture, and it is the reason for the rest of the talk.
+
+The left column is how most of us were taught. Define the task, design the fixture so the
+part is always in the same place, model the kinematics, write a perception pipeline per
+object, hand-code the state machine, tune the gains, validate deterministically. And when
+the part changes, you go back to the fixture.
+
+The right column is how a programme runs now. Define the task and what counts as success.
+Build the evaluation harness — second, not last. Collect demonstrations by teleoperating
+the robot. Fine-tune a pretrained policy on them. Evaluate in simulation, then hardware in
+the loop. Deploy with the classical controller underneath as fallback. And the failures
+become the next dataset.
+
+Notice what did not change. Same actuators, same controllers, same safety layer. What
+moved is where the task knowledge lives: it used to sit in code that an engineer wrote,
+and now it sits in weights that data produced.
+
+Everything else in this deck follows from that one sentence."
+
+---
+
+## 5 — Hardware is standardising. The brain is not.
+
+*The 'why the brain' argument, and now also the slide that carries the cost of the trade.
+This is the one to defend if someone pushes back.*
+
+"And here is why I think this is where our attention should go.
+
+Hardware is standardising. A Unitree G1 starts near thirteen and a half thousand dollars.
+Actuators, IMUs, depth cameras, onboard compute — all off the shelf, with Chinese
+manufacturing pushing volume up and price down at once. A mechanism that would have taken
+two years and a PhD in 2005 can now be bought — and your competitor can buy the same one.
+
+Which means the mechanism is a weaker moat than it was. Actuators and sensing still
+differentiate — far less than when you built them yourself. What is left to differentiate on is what the machine can be told
+to do, how it copes with a scene nobody staged, and how rarely a human has to step in. Increasingly those
+differences are expressed in the policy and the data, not only in the mechanism.
+
+So the scarce assets are the demonstration data, the trained policy, and an evaluation
+protocol you can defend. None of those can be bought.
+
+One honest qualifier: a purpose-built machine still beats a general one at a single task,
+and it always will. The brain is not what wins the first task. It is what buys you the
+second one without a second engineering programme.
+
+And be honest about the price, because this room will think of it anyway. You give up
+verifiability — you can no longer read the code and say what the machine will do. You take
+on compute and latency onboard. And you take on data: the policy has to be fed with
+demonstrations somebody produced. You give up predicting exactly what the machine will do,
+and you get a machine whose cost stops scaling with the number of tasks.
+
+That is the argument of the whole talk. The hard, valuable, unbought part of a robot
+programme has moved from the mechanism to the intelligence — and the people best placed to
+build that intelligence are the ones who already understand the mechanism."
+
+---
+
+## 6 — A chatbot runs in a line. A body runs in a loop.
+
+*Point at the laptop first. The two panels are asking the same question.*
+
+"Here is the one idea everything else follows from — and notice that both sides of this
+slide are answering the same question.
+
+On the left, a text model. Someone asks it how a robot should pick up and carry a box.
+It gives a perfectly good answer: grip here, keep the load close, watch the balance. A
+prompt went in, an answer came out, and the world is exactly as it was. If the answer is
+bad you press regenerate. Nothing was spent.
+
+On the right, the same question, but the machine has to actually do it. It senses, it
+decides, it acts — and then the thing it just did becomes part of what it senses next.
+That arrow along the bottom is the whole difference. Output is force, not words.
+
+If a language model writes a bad paragraph, you delete it. If the robot drops the box,
+the box is on the floor, the contents are broken, and every decision after that is made
+in the world that mistake created. There is no regenerate button."
+
+---
+
+## 7 — What happens on every pass
+
+"Let me slow the loop down, because the vocabulary matters.
+
+Sensors. Perception — turning raw signal into a usable picture. State — what's true
+now plus what happened a moment ago. Policy — the decision-maker. Actuators — the
+motors that actually move.
+
+The only jargon worth memorising is *policy*. It means the decision-maker: a function
+from what I sense to what I do. When someone says a robot 'learned a policy,' that's
+all they mean — the mapping was trained instead of written by hand.
+
+And notice the speed. A driving stack goes round this loop maybe fifty times a second.
+A walking robot's balance controller closer to a thousand, because if it's late it's
+already falling."
+
+---
+
+## 8 — The easy things turned out to be the hard things
+
+"So why is this hard? Four reasons. Here is the first.
+
+Look at the two lists. Everything on the left — chess, calculus, exams — computers took
+from us decades ago. Everything on the right, a four-year-old does without thinking,
+and we still can't do reliably.
+
+That inversion has a name: Moravec's paradox. Your hands and eyes have half a billion
+years of evolution behind them. Arithmetic has maybe five thousand. The skills that
+feel effortless are the ones with the most machinery underneath — which makes them the
+ones with the most left to rebuild."
+
+---
+
+## 9 — Small errors snowball
+
+*The most important slide in the deck. Slow down.*
+
+"Second reason, and if you remember one technical idea today, make it this one.
+
+Say you train a driving policy by copying a human. During training the car is always
+near the middle of the lane, because the human kept it there. That's the blue band.
+
+Now it drives. It drifts slightly — and now it is somewhere it has never seen, so its
+next guess is a little worse, which puts it further out, where the next guess is worse
+again. That's the staircase.
+
+In text this barely matters. In control it's the difference between arriving and
+crashing. Most of the craft of this field is various ways of breaking that feedback."
+
+---
+
+## 10 — 99% reliable is a failing grade
+
+"Third. Reliability numbers that sound excellent are useless here.
+
+A robot making a thousand decisions a day at ninety-nine per cent accuracy fails ten
+times a day. Ten broken items, ten interventions, ten times somebody walks over. That
+is not a product.
+
+You need the third bar. And every extra nine costs roughly as much work as all the
+nines before it combined. A wet floor. A child's balloon. Low sun through fog. Each one
+is rare. Together they are constant."
+
+---
+
+## 11 — There is no internet of robot data
+
+"Fourth: the data doesn't exist.
+
+Language models got a free gift — the entire web, already written and paid for. There
+is no equivalent for a robot hand doing four hundred million things. Somebody has to
+teleoperate a real machine, hour by hour. That's why data collection is a genuine moat
+in robotics in a way it simply isn't in text.
+
+The obvious workaround is simulation. But simulated friction, contact and lighting are
+never quite right, so a policy perfect in sim can fail on the real machine. That's the
+reality gap. The standard fix is at the bottom: train across thousands of slightly
+*wrong* physics settings, so reality looks like one more variation."
+
+---
+
+## 12 — Simulation is the factory floor
+
+*Transition. The next four slides are the tooling section.*
+
+"Which brings us to where the data actually comes from.
+
+One real robot produces one hour of data per hour, needs a human beside it, and breaks
+things. One GPU runs thousands of simulated robots at once, overnight, for the price of
+electricity.
+
+Four things you get. Parallelism — Isaac Lab runs four thousand-plus worlds on a single
+GPU. Safety — it can fall down the stairs for nothing. Free labels — the simulator already
+knows the pose of every object, so the ground truth is perfect and nobody annotated it.
+And randomisation, which is the main defence against the gap we just talked about.
+
+*Point at the render on the right.*
+
+And look at what that fleet is actually doing. Most of those runs are failures — robots
+stumbling, robots face-down, a handful getting to the end. That is not a flaw in the
+picture, it is the whole point. Learning to walk means falling over a few million times,
+and the only reason that is affordable is that none of those falls cost you a robot."
+
+---
+
+## 13 — The simulation landscape
+
+*Practical slide. Two facts here save people real time.*
+
+"The tools, and two things worth knowing.
+
+MuJoCo is DeepMind's engine and the academic default — easy to install, best-in-class
+for contact-rich manipulation, and MJX runs the same physics on GPU.
+
+Isaac Sim is NVIDIA's full simulator: PhysX, photoreal rendering, sensor simulation.
+
+Now the first thing worth knowing: **Isaac Lab is not a simulator.** It's the learning
+framework on top of Isaac Sim. And the second: **Isaac Gym is deprecated.** It was the
+first GPU RL simulator and it's been folded into Isaac Lab. If someone on your team is
+starting there, stop them.
+
+Newton is the interesting newcomer — an open, differentiable engine jointly built by
+NVIDIA, Google DeepMind and Disney Research. Rivals sharing a physics layer tells you
+something.
+
+Rule of thumb at the bottom: MuJoCo to prototype and evaluate, Isaac Lab when you need
+thousands of parallel worlds."
+
+---
+
+## 14 — Where simulation is heading
+
+"Four trends.
+
+GPU-parallel is now the baseline, not a feature. The field is consolidating on shared
+standards — OpenUSD for scenes, one open engine underneath. The simulator is becoming a
+data factory: the output people want is a dataset, not a demo, and NVIDIA reports
+cutting synthetic-data generation from months to about thirty-six hours.
+
+And the fourth is the one to watch. Learned simulators — world models that generate
+interactive scenes straight from video. A 2026 survey of two hundred systems found they
+already substitute for hand-built simulators in narrow cases, but still lose on
+guaranteed physics and long-horizon consistency. Not yet a replacement. Closer than it
+was."
+
+---
+
+## 15 — ROS
+
+"The other half of the stack, and the part that isn't glamorous.
+
+ROS is not an operating system. It's a message bus plus an ecosystem: one program
+publishes a topic, others subscribe, and nobody needs to know who is listening. Around
+it you get drivers for most sensors and arms, MoveIt for motion planning, Nav2 for
+navigation, rviz to see what the robot thinks, rosbag to replay a failure.
+
+Two honest caveats. First, version: ROS 1 is over — Noetic reached end of life in May
+2025, so ROS 2 is the only maintained line, and Jazzy is the LTS through 2029.
+
+Second, and more important: the fast loop usually runs *outside* ROS. A hundred-hertz
+policy will not wait on middleware. Several humanoid stacks use almost none of ROS,
+keeping it for hardware I/O and logging."
+
+---
+
+## 16 — Three approaches
+
+"So how are these things actually built? Three generations, top to bottom.
+
+The old way: a pipeline where engineers write and tune every box. Inspectable, and
+brittle — every new situation needs a new rule.
+
+The middle way: one big learned network from sensing to action. Handles mess the rules
+couldn't, but it's opaque and data-hungry.
+
+The current way: start from a model already trained on internet images and text, then
+teach it to output motion. Here's why that matters — it already knows what a mug is.
+You don't have to teach it mugs.
+
+That third row is why generative AI and robotics stopped being separate conversations."
+
+---
+
+## 17 — Three jobs, not three technologies
+
+"Let me place all of this on a map, because people mix these terms up constantly.
+
+Three circles, and they're three *jobs*, not three technologies. Perceptual: take the
+world in. Generative: make something new. Embodied: act on the world.
+
+The overlaps are where the interesting things live. Perception plus generation is
+multimodal — it sees, then describes. Perception plus embodiment is classic robot
+sensing, decades old.
+
+And the middle is the frontier: a VLA perceives, generates and acts at once."
+
+---
+
+## 18 — Four model types
+
+"Which brings us to the acronyms, because people use them interchangeably and they are
+not the same thing.
+
+LLM: text in, text out. VLM: add eyes. VLA: add hands. World model: add foresight.
+
+The key point is the one at the bottom. Each is the previous one plus a channel.
+Nothing is thrown away and rebuilt — it's added to. The next four slides take one each."
+
+---
+
+## 19 — LLM
+
+"The language model is the reasoning backbone.
+
+What it adds is language. It can break 'tidy the kitchen' into steps, argue about the
+order, and write code to call the robot's existing skills.
+
+Where it stops: it has never seen the kitchen. With no eyes it can't tell whether the
+mug is where it assumed, so the plan is only as good as the description it was handed.
+
+You meet it as the high-level planner above a robot stack — and as the thing the next
+three models are built out of."
+
+---
+
+## 20 — VLM
+
+"Add vision and you get grounding.
+
+Now it can say what's on the table, roughly where, whether the drawer is open. The words
+are tied to the actual scene.
+
+Where it stops: the output is still language. It can tell you the mug is left of the
+kettle. It cannot move an arm twelve centimetres to reach it.
+
+You meet it as the perception-and-reasoning half of nearly every robot policy in use
+today. In GR00T, for instance, a vision-language backbone sits frozen inside the model."
+
+---
+
+## 21 — VLA
+
+*The centre of gravity of the technical section.*
+
+"Add the last channel and you get a vision-language-action model.
+
+Camera images, an instruction in plain English, the robot's joint positions in. Joint
+targets and gripper commands out. It keeps the web knowledge of the vision-language
+model and bolts on an action head — usually diffusion or flow matching.
+
+Where it stops is speed. A big model cannot think at a hundred hertz, so most designs
+split it: the heavy model plans at five to ten hertz, and a small action expert runs the
+motion at fifty to a hundred.
+
+This is the leading frontier architecture and what people mean by 'robot foundation
+model' — though production deployment is still early. RT-2 coined the term in 2023, OpenVLA put an open one in every lab, and π-zero,
+GR00T, Gemini Robotics and Helix turned it into production systems."
+
+---
+
+## 22 — World model
+
+"And the fourth: instead of only learning 'see this, do that,' the system learns to
+predict what would happen if it acted.
+
+Reach across the top — knocks the glass. Push it to the edge — falls off. Grip and lift
+— works. Pick that one.
+
+That's something like imagination: a way to check a plan before spending a real action
+on it. Which, if you think back to the snowball slide, is exactly the medicine that
+problem needs. It's also how a lot of synthetic training data now gets made."
+
+---
+
+## 23 — How you would actually build one
+
+*The applied slide. Walk the eight boxes quickly; spend the time on steps 2 and 8.*
+
+"So how does this actually enter a robot programme? Eight steps, and the order matters.
+
+Define the task and what counts as success. Then — before any model work — build the
+evaluation harness. Everyone does this last. Doing it second is the single highest-value
+change you can make, because without it you cannot tell whether anything you do
+afterwards helped.
+
+Then collect teleoperation data, somewhere between fifty and a few hundred demonstrations,
+and augment it in simulation. Fine-tune an open VLA — π-zero, GR00T, OpenVLA, SmolVLA.
+Evaluate in sim, which is cheap and will flatter you. Then hardware in the loop in a
+contained cell. Then shadow mode, where the policy proposes and a human commits. Then
+deploy with a classical fallback underneath.
+
+And after that, the loop that never ends: log every intervention, turn the failures into
+the next dataset, retrain, re-run the same harness so the numbers stay comparable.
+
+One line to take away, at the bottom. Draw the safety boundary early. The learned policy
+owns 'what to do next.' It never owns 'do not hit the wall' — that stays in the controller
+underneath, where you can still prove it."
+
+---
+
+## 24 — Model labs and the platform
+
+*Pick two of the four to speak to; let people read the rest.*
+
+"A little detail on the brains.
+
+DeepMind, founded 2010 in London, does frontier research generally — robotics is one
+arm of it. Their Gemini Robotics family includes a version small enough to run on the
+robot itself, and in 2026 they partnered with Boston Dynamics to put it on Atlas.
+
+NVIDIA, founded 1993, is the platform. GR00T N1 in March 2025 was the first open
+foundation model for humanoids.
+
+Physical Intelligence is the one to watch on the startup side: founded only in 2024,
+and its π-zero models have already become the baseline other labs compare against.
+Skild raised close to one and a half billion dollars chasing a model that drives any
+robot — with public deployment evidence still thinner than the funding."
+
+---
+
+## 25 — American humanoid makers
+
+"The American bodies.
+
+Boston Dynamics is the oldest name here — 1992, out of MIT, now owned by Hyundai.
+Thirty years of setting the hardware benchmark, and now handing the thinking half to
+DeepMind.
+
+Figure is the best-funded pure-play in the field at a reported thirty-nine billion
+dollar valuation. Builds the body and the Helix model that drives it.
+
+But if you want the one furthest along in *paid* work, it's Agility. Digit is the least
+humanoid-looking robot on the slide and it's the one actually moving totes for
+customers, with reported contracted orders over three hundred million dollars.
+
+Apptronik came out of a University of Texas lab and sells Apollo as a service, with
+Mercedes-Benz and GXO as named partners."
+
+---
+
+## 26 — Where the units are actually shipping
+
+*The contrast with slide 6 is the point. Say it explicitly.*
+
+"Now compare that with Asia and Europe, because the game is different.
+
+Unitree sets the price floor for the entire industry — the G1 base price has fallen to
+around thirteen and a half thousand dollars. AgiBot is the volume leader: roughly five
+thousand units shipped in 2025, its ten-thousandth humanoid by March 2026, and it
+publishes an open dataset other labs train on.
+
+UBTech is unusually candid — it has described its own robots as no more than half as
+efficient as a human worker, which is more honesty than most of this industry offers.
+
+And NEURA in Germany is Europe's standard-bearer, suddenly far ahead of other European
+startups on funding.
+
+So: the American companies have the valuations. The Chinese companies have the units."
+
+---
+
+## 27 — Which countries lead, and at what
+
+"That difference shows up in the map.
+
+China has more humanoid companies than anyone — about twenty-one of the forty-five or
+so worldwide — and Unitree and AgiBot together are expected to account for close to
+eighty per cent of this year's shipments.
+
+The United States has fourteen companies, the largest valuations, and nearly all the
+model labs. North America took nearly sixty per cent of physical-AI venture dollars
+this year.
+
+Europe has a smaller funding signal but serious factory demand. Japan supply
+components and, quietly, ownership — Hyundai owns Boston Dynamics.
+
+One caveat: the counts differ between trackers depending on what qualifies as a
+humanoid company. Read the split, not the digits."
+
+---
+
+## 28 — Robots running on these models
+
+"And here is what those companies have actually put on the floor.
+
+Figure builds both the body and the model. Atlas is the clean split — Boston Dynamics
+hardware, DeepMind brain. Optimus descends from Tesla's driving stack. Digit is the
+warehouse workhorse. Apollo runs an on-device model that adapts from about fifty
+demonstrations. And Unitree and AgiBot are the volume story.
+
+The line at the bottom matters more than the list: almost all of this is pilots and
+early paid deployments, not fleets running unattended."
+
+---
+
+## 29 — Humanoids and quadrupeds
+
+*Engineering audiences want this comparison. It is the most concrete slide in the deck
+for them.*
+
+"The impact is not the same for the two form factors, and the difference is structural.
+
+Quadrupeds first. Legged locomotion became highly capable before foundation models existed — massively
+parallel RL in simulation with domain randomisation, around 2019 to 2022. That policy is
+a small network on proprioception running onboard at fifty to two hundred hertz. It is
+learned, but it is not a foundation model and it does not need one.
+
+So for a quadruped, embodied AI arrives as a layer above a product that already sells:
+semantic missions instead of waypoint lists, VLM inspection and anomaly detection — which
+is most of what these robots are actually paid for — plain-language tasking, and
+manipulation once you bolt on an arm. The locomotion controller stays separate, small and
+fast. Nothing from the big model enters the balance loop.
+
+Humanoids are the opposite. There, the model *is* the product. The whole reason for the
+form factor is generality, and generality is exactly what hand-programming cannot give
+you. A humanoid without a learned policy is an extremely expensive single-purpose machine,
+and a purpose-built machine beats it every time.
+
+And it inherits a harder problem. Balance yields to the same RL as the quadrupeds.
+Bimanual dexterous manipulation does not — contact-rich, high DoF, thin tactile data, and
+sim-to-real that works badly for contact and deformables. That forces real teleoperated
+data, which is why every humanoid company runs a teleop fleet, and why the two-rate split
+we saw on the VLA slide exists at all.
+
+So: same technology, opposite risk profile. Quadruped progress is incremental and backed
+by revenue. Humanoid progress is discontinuous and backed by funding.
+
+And one thing to keep in your head when you watch the announcements — a lot of what ships
+as a humanoid is a wheeled base with a torso and two arms. On a flat warehouse floor, legs
+add cost, power draw and failure modes without adding task value."
+
+---
+
+## 30 — The frontiers
+
+"What's actually unsolved.
+
+Legs are close to solved; hands are not — dexterous manipulation needs tactile sensing
+that's still expensive and thinly covered by data. Cross-embodiment: one model, many
+bodies, still costs far more retraining than the pitch suggests. Long-horizon autonomy:
+most demos are seconds long.
+
+Evaluation is the one nobody likes talking about. There is no agreed benchmark. Success
+rates come from private task sets, so numbers between labs rarely compare.
+
+Then learned simulators, and the plain economics — a policy has to run onboard inside a
+power budget and beat the cost of the person currently doing the job.
+
+Notice that only two of these six are model problems. The rest are data, measurement,
+hardware and economics. That's why progress looks slower than the model releases
+suggest."
+
+---
+
+## 31 — Generative AI dominates today
+
+*Don't soften this. It buys you credibility for the next slide.*
+
+"And here's the reality check.
+
+Generative AI product revenue this year is around ninety billion dollars. Physical and
+embodied AI, around one and a half. A factor of sixty. Two thirds of organisations
+already use generative AI for something; almost none of them own a robot.
+
+But look at the top right: nearly fifty billion dollars of venture funding into physical
+AI in the first half of this year alone, about four times the previous half-year.
+
+So the honest summary is the box at the bottom. Embodied AI is raising far more than it
+sells. That is a bet on the next decade, not a description of this one.
+
+One caveat — these estimates vary by a factor of four or five between research firms.
+Trust the ratio, not the digits."
+
+---
+
+## 32 — Rank the evidence
+
+*Practical slide. Deliver it as advice.*
+
+"If you take one habit away, take this one. When someone shows you a robot, ask what
+kind of evidence you're looking at.
+
+A vendor video shows a task *can* be demonstrated. A controlled pilot shows it was
+tested somewhere real. A paid deployment shows a customer saw enough value to pay. And
+multi-site operation with published uptime and intervention data — that's the only rung
+that really means anything.
+
+Most of what you'll read is the first one.
+
+On the right is my honest read of 2026: architecture looks settled, deployments cluster
+where failure is tolerable, humanoids are mostly pilots, and the sober forecasts put
+reliable unattended autonomy somewhere around 2028 to 2030."
+
+---
+
+## 33 — Where your edge actually is
+
+*The slide the whole talk exists for. Slow down and say it plainly.*
+
+"So here is the argument I actually want to make.
+
+Generative AI is loud right now, and a lot of robotics people are being pulled into it —
+building agents, fine-tuning chat models, chasing the thing that is on the front page. I
+think that is the wrong move for this room, and here is why.
+
+In LLM and agent work you enter the largest and most crowded talent market in software,
+and almost nothing you learned about machines counts there. Kinematics, calibration, latency budgets,
+safety cases — none of it is priced in. The work is also crowded and largely settled: the
+architectures are known, the leaders have the compute, and the differentiation is in
+product rather than engineering.
+
+Now look at the other column. In embodied AI the bottleneck is not model quality. It is
+data, evaluation and reliability — teleoperation rigs, demonstration quality, system
+identification, latency budgets, safety cases, honest test protocols. Read that list
+again: it is a description of a robotics engineer. The people flooding into AI cannot do
+any of it, and the field cannot ship without it.
+
+And it is early. Capital has arrived, revenue has not, and there is still no accepted
+standard for evaluation. Early is exactly when a scarce skill is worth the most.
+
+One thing I want to be precise about, because it is the obvious objection. This is not
+'ignore generative AI.' A VLA is a generative model. You have to learn transformers,
+fine-tuning and flow matching either way. The question is where you point them: at a
+chatbot, where you are one of a million — or at a body, where you are one of very few."
+
+---
+
+## 34 — Four steps, in this order
+
+*Concrete. Read the four headlines; let them read the detail.*
+
+"If you want to be useful in this field inside a month, do these four things in this
+order.
+
+One: get a simulator running this week. MuJoCo installs with pip and Playground gives
+you tasks the same afternoon. Go to Isaac Lab only when you actually need thousands of
+parallel worlds — not before.
+
+Two: run an open VLA end to end. LeRobot with SmolVLA fits on a consumer GPU. Fine-tune
+it on something small. The point isn't the result, it's feeling how much data one new
+task costs.
+
+Three: collect a hundred demonstrations yourself. Teleoperate a cheap arm or a simulated
+one. Nothing teaches faster that data quality dominates model choice.
+
+Four — and I'd argue this is first in importance even if it's fourth in sequence: build
+the evaluation harness. Fixed task list, fixed trial count, randomised initial states,
+interventions counted. It is the scarcest artefact in this field. Most teams don't have
+one, which is exactly why nobody's numbers compare."
+
+---
+
+## 35 — Signals worth tracking, and noise
+
+*Close the argument. This is the slide people photograph.*
+
+"And how do you anticipate where this goes, without re-reading the news every week.
+
+Watch seven things. Intervention rate and uptime, published per site over months. Cost
+per robot-hour against the wage it would replace. Cross-embodiment results — same policy,
+new body, little retraining. The hardware price curve; a G1 at thirteen and a half
+thousand dollars changes what is worth automating at all. Whether any evaluation standard
+gets adopted across labs. On-device latency and watts at fifty to a hundred hertz. And
+whether learned simulators reach production.
+
+Ignore the right-hand column. Demo videos, valuations, shipment counts with no
+utilisation figure, teleoperated demos presented as autonomy, benchmark scores on a task
+suite the same lab designed.
+
+The reason is the line at the bottom. The timing question is not when the models get
+better — they will. It's when the last few percent of reliability arrives. Only the
+left-hand column measures that."
+
+---
+
+## 36 — Four things to carry away
+
+"Four things.
+
+One: the loop is the whole difference. Output is force, not words, so errors compound
+instead of being regenerated.
+
+Two: embodied sits on top of generative. Not a rival wave — the hardest layer of the same
+stack. Learn the models, then point them at a body rather than a chat window.
+
+Three: the bottleneck is your field, not theirs. Data, evaluation and reliability decide
+when this ships, and that is robotics work.
+
+Four: judge by deployments, not demos — including your own. Build the harness, count the
+interventions, and be early while being early still pays.
+
+Happy to take questions."
+
+---
+
+## The 20-minute cut
+
+Drop slides 13, 14, 15, 19, 20, 24, 25 and 30. That leaves the history, why a
+robot needs this, the four hard problems, one simulation slide, the model family
+compressed to VLA and world models, the build pipeline, the form factors, the frontiers,
+the money, and the whole 37–40 call.
+
+Never drop 4, 5, 22, 28 or 33–36 for this audience — 4 to 6 are the paradigm change and
+the reason to care, 24 is how you would actually do it, 31 is the comparison they came for,
+and 36 to 39 is the argument.
+
+If you have only ten minutes: 2, 4, 5, 9, 22, 30, 33, 36.
+
+---
+
+## Likely questions, and short answers
+
+**"Isn't this just telling us to chase a different hype cycle?"**
+The test is whether the preparation is wasted if the timeline slips. It isn't. Simulation,
+evaluation design, data pipelines and control are durable skills that pay off in any
+robotics work, embodied AI or not. Compare that with spending two years building agent
+wrappers that a model release makes redundant.
+
+**"Embodied AI is raising far more than it sells. Why start now rather than in 2028?"**
+Because scarce skills are worth the most before the field standardises, and because the
+gap between capital and revenue is precisely a gap in the things you are good at. If you
+wait until reliability is solved, the interesting work is done and you are competing on
+model skills alone.
+
+**"Why not just do RL on the real robot?"**
+Sample efficiency and wear. Millions of episodes is fine in simulation and impossible on
+hardware that costs money and breaks. Real-robot RL is mostly used to fine-tune a policy
+pretrained elsewhere.
+
+**"Why generative action heads instead of regressing actions?"**
+The action distribution is multimodal — several correct ways to grasp the same mug — and
+a regression head averages them into something that grasps nothing. Diffusion and flow
+matching sample one mode instead of blending all of them.
+
+**"How do you actually evaluate one of these?"**
+Badly, and that is slide 29. Private task suites, small trial counts, no agreed protocol.
+If someone quotes a success rate, ask how many trials, on what task distribution, and who
+chose the tasks.
+
+**"Does ROS 2 give real-time guarantees?"**
+It gives the ingredients — DDS with QoS, a real-time-capable executor — not a guarantee.
+Genuinely hard real-time sits below ROS in a dedicated controller, which is the same
+reason the learned policy usually runs outside it.
+
+**"Is sim-to-real still just domain randomisation?"**
+Still the backbone, now with company: system identification to narrow the randomisation
+range, real-to-sim reconstruction from scans, and co-training on simulated plus
+teleoperated real data.
+
+**"Is China going to win this?"**
+They are winning on a different axis — units, price, manufacturing — while the US leads on
+capital and frontier models. Whether volume or intelligence is the binding constraint is
+genuinely open.
+
